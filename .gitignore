@@ -1,0 +1,12 @@
+# OSX
+.DS_Store
+
+# VIM session
+session.vim
+
+# Clojure
+doc/
+resources/
+target/
+.lein-repl-history
+.nrepl-port
