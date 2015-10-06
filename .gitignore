@@ -6,7 +6,9 @@ session.vim
 
 # Clojure
 doc/
-resources/
 target/
 .lein-repl-history
 .nrepl-port
+
+resources/public/js/
+resources/public/data.transit.json
