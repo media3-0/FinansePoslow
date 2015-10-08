@@ -9,6 +9,7 @@ doc/
 target/
 .lein-repl-history
 .nrepl-port
+figwheel_server.log
 
 resources/public/js/
 resources/public/data.transit.json

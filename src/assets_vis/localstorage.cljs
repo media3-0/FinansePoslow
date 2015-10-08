@@ -10,6 +10,11 @@
   [key]
   (.getItem (.-localStorage js/window) key))
 
+(defn has-item
+  "Returns true if `key` exists in localStorage."
+  [key]
+  (nil? (get-item key)))
+
 (defn remove-item!
   "Remove the browser's localStorage value for the given `key`"
   [key]
