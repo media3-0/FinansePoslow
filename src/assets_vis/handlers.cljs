@@ -37,7 +37,9 @@
     (get-data)
     (-> db
         (add-dom-listener :resize dispatch-resize)
-        (assoc :window-size (window-size)))))
+        (assoc :graph-years ["2011" "2015"]
+               :data-selector :cash
+               :window-size (window-size)))))
 
 (register-handler
   :resize-window
@@ -45,9 +47,36 @@
     (let [size (or size (window-size))]
       (assoc db :window-size size))))
 
+(defn year-data
+  [data selector year]
+  (let [members 100
+        max-value (apply max (map #(get-in % [1 selector year :sum]) data))
+        sorted-values (take members (reverse (sort-by #(get-in % [1 selector year :sum]) data)))]
+    {:max-value max-value
+     :sorted-values sorted-values}))
+
 (register-handler
   :downloaded-data
   (fn [db [_ data]]
-    (-> db
-        (assoc :data data)
-        (assoc :initialized? true))))
+    (let [data (into {}
+                     (map (fn [year] [year {:cash (year-data data :cash year)
+                                            :other-income (year-data data :other-income year)}])
+                          (map str (range 2011 2016))))]
+      (assoc db
+             :data data
+             :initialized? true))))
+
+(register-handler
+  :graph-year-clicked
+  (fn [db [_ index year]]
+    (assoc-in db [:graph-years index] year)))
+
+(register-handler
+  :data-selector-change
+  (fn [db [_ selector]]
+    (assoc db :data-selector selector)))
+
+(register-handler
+  :highlight-id
+  (fn [db [_ id]]
+    (assoc db :highlight-id id)))
