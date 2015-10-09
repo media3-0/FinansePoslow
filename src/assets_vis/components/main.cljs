@@ -4,44 +4,62 @@
   (:require [reagent.core :refer [create-class dom-node]]
             [re-frame.core :refer [subscribe dispatch]]
             [assets-vis.css :refer [css]]
+            [assets-vis.components.styles :as styles]
             [goog.string :as s]
             [goog.string.format]))
 
+(defn format-cash [string]
+  (let [splited (clojure.string/split string ".")
+        cash (first splited)]
+    (str (apply str
+                (reverse (clojure.string/join
+                           " "
+                           (map
+                             clojure.string/join
+                             (partition 3 3 nil (reverse cash))))))
+         ","
+         (last splited))))
+
 (defn bar
   [{:keys [id name height x y year max-value column-width selector highlight?] :as data}]
-  (let [margin 4
-        font-size 12
+  (let [margin 6
+        font-size (:font-size-small styles/consts)
         cash (s/format "%.2f" (get-in (get data selector) [year :sum]))]
     [:g {:on-mouse-over #(dispatch [:highlight-id id])
          :on-mouse-out #(dispatch [:highlight-id nil])}
      [:rect {:height (- height margin)
              :width column-width
-             :fill (if highlight? "#eee" "#ddd")
+             :fill (if highlight? (:gray-dark styles/colors) (:gray styles/colors))
              :x x
              :y y}]
      [:rect {:height (- height margin)
              :width (* (/ cash max-value) column-width)
-             :fill (if highlight? "#bbb" "#999")
+             :fill (:blue styles/colors)
              :x x
              :y y}]
      [:text {:x (+ x margin)
-             :y (+ y (/ height 2) (/ margin 2))
-             :font-family "Helvetica"
+             :y (+ y font-size 5)
              :font-size font-size
-             :fill "#333"}
-      (str name ": " cash " zł")]]))
+             :fill (:main-text-color styles/colors)}
+      name]
+     [:text {:x (+ x margin)
+             :y (+ y (* font-size 2) 8)
+             :font-size (- font-size 2)
+             :fill (:main-text-color styles/colors)
+             :style styles/bar-cash}
+      (str (format-cash cash) " zł")]]))
 
 (defn column
-  [{:keys [x bar-height year data selector column-width highlight-id]}]
+  [{:keys [x year data selector column-width highlight-id]}]
   (let [sorted-values (:sorted-values data)
         max-value (:max-value data)]
     [:g
      (for [[i [ma-id ma-data]] (map-indexed vector sorted-values)]
        ^{:key ma-id}
        [bar (conj ma-data {:id ma-id
-                           :height bar-height
+                           :height (:bar-height styles/consts)
                            :x x
-                           :y (* i bar-height)
+                           :y (* i (:bar-height styles/consts))
                            :selector selector
                            :column-width column-width
                            :year year
@@ -49,12 +67,11 @@
                            :max-value max-value})])]))
 
 (defn columns
-  [{:keys [years data column-width column-margin bar-height selector highlight-id]}]
+  [{:keys [years data column-width column-margin selector highlight-id]}]
   [:g
    (for [[i year] (map-indexed vector years)]
      ^{:key (str i "-" year)}
      [column {:x (* i (+ column-width column-margin))
-              :bar-height bar-height
               :column-width column-width
               :highlight-id highlight-id
               :year year
@@ -65,9 +82,11 @@
   [pred coll]
   (keep-indexed #(when (pred %2) %1) coll))
 
-(defn connection-column
-  [{:keys [year-1 year-2 x bar-height column-margin highlight-id members-count]}]
-  (let [lines (map
+(defn connection
+  [{:keys [year-1 year-2 x column-margin highlight-id members-count]}]
+  (let [line-width (:line-width styles/consts)
+        bar-height (:bar-height styles/consts)
+        lines (map
                 (fn [[i-1 [ma-1-id year-1-data]]]
                   (let [i-2 (indices (fn [[ma-2-id _]] (= ma-2-id ma-1-id)) year-2)]
                     [i-1 (first i-2) ma-1-id]))
@@ -77,40 +96,41 @@
                              (not (nil? i-2))))
                       lines)]
     [:g
-     (for [[i-1 i-2 ma-id] lines]
-       ^{:key ma-id}
-       [:line {:x1 x
+     (for [[i-1 i-2 id] lines]
+       ^{:key id}
+       [:line {:x1 (- x (/ line-width 2))
                :y1 (+ (* i-1 bar-height) (/ bar-height 2))
-               :x2 (+ x column-margin)
+               :x2 (+ x column-margin (/ line-width 2))
                :y2 (+ (* i-2 bar-height) (/ bar-height 2))
-               :fill "none"
-               :stroke (if (= ma-id highlight-id) "#eee" "#ddd")
-               :stroke-width 3}])]))
+               :stroke (if (= id highlight-id) (:gray-dark styles/colors) (:gray styles/colors))
+               :stroke-width line-width
+               :on-mouse-over #(dispatch [:highlight-id id])
+               :on-mouse-out #(dispatch [:highlight-id nil])}])]))
 
 (defn connections
-  [{:keys [years data selector column-width column-margin bar-height highlight-id members-count]}]
+  [{:keys [years data selector column-width column-margin highlight-id members-count]}]
   [:g
    (for [[i [year-1 year-2]] (map-indexed vector (partition 2 1 years))]
      ^{:key i}
-     [connection-column {:year-1 (get-in data [year-1 selector :sorted-values])
-                         :year-2 (get-in data [year-2 selector :sorted-values])
-                         :x (+ (* i (+ column-width column-margin)) column-width)
-                         :bar-height bar-height
-                         :column-margin column-margin
-                         :highlight-id highlight-id
-                         :members-count members-count}])])
+     [connection {:year-1 (get-in data [year-1 selector :sorted-values])
+                  :year-2 (get-in data [year-2 selector :sorted-values])
+                  :x (+ (* i (+ column-width column-margin)) column-width)
+                  :column-margin column-margin
+                  :highlight-id highlight-id
+                  :members-count members-count}])])
 
 (defn header-year-select
-  [{:keys [available-years selected-year column-index column-width column-margin margin font-size-big font-size-small]}]
+  [{:keys [available-years selected-year column-index column-width column-margin]}]
   [:g
    (for [[i year] (map-indexed vector available-years)]
-     (let [font-size (if (= year selected-year) font-size-big font-size-small)]
+     (let [font-size (if (= year selected-year)
+                       (:font-size-big styles/consts)
+                       (:font-size-small styles/consts))]
        ^{:key i} [:text {:x (+ (* (+ i 0.5) (/ column-width (count available-years)))
                                (* column-index (+ column-width column-margin)))
-                         :y 44
+                         :y 50
                          :font-size font-size
-                         :font-family "Helvetica"
-                         :fill "#999"
+                         :fill (:main-text-color styles/colors)
                          :text-anchor "middle"
                          :on-click #(dispatch [:graph-year-clicked column-index year])
                          :style (css {:cursor "pointer"})}
@@ -118,19 +138,13 @@
 
 (defn header
   [{:keys [available-years years column-width column-margin]}]
-  (let [font-size-big 24
-        font-size-small 18
-        margin 10]
-    [:g
-     (for [[i year] (map-indexed vector years)]
-       ^{:key i} [header-year-select {:available-years available-years
-                                      :selected-year year
-                                      :column-index i
-                                      :column-width column-width
-                                      :column-margin column-margin
-                                      :font-size-big font-size-big
-                                      :font-size-small font-size-small
-                                      :margin margin}])]))
+  [:g
+   (for [[i year] (map-indexed vector years)]
+     ^{:key i} [header-year-select {:available-years available-years
+                                    :selected-year year
+                                    :column-index i
+                                    :column-width column-width
+                                    :column-margin column-margin }])])
 
 (defn graph
   []
@@ -142,12 +156,11 @@
     (let [margin 20
           members-count (count (-> data first last :cash :sorted-values))
           width (- width margin)
-          bar-height 30
           column-width (/ width 3)
           column-margin (/ width 3)
           header-height 60
           available-years (map str (range 2011 2016))]
-      [:svg {:height (* bar-height members-count)
+      [:svg {:height (* (:bar-height styles/consts) members-count)
              :width (- (* (+ column-width column-margin) (count graph-years)) column-margin)}
        [header {:available-years available-years
                 :years graph-years
@@ -159,7 +172,6 @@
                       :selector selector
                       :column-width column-width
                       :column-margin column-margin
-                      :bar-height bar-height
                       :highlight-id highlight-id
                       :members-count members-count}]
         [columns {:years graph-years
@@ -167,32 +179,38 @@
                   :selector selector
                   :column-width column-width
                   :column-margin column-margin
-                  :bar-height bar-height
                   :highlight-id highlight-id}]]])))
 
 (defn data-selector
   []
   (with-subs [selector [:data-selector]]
     [:div
-     [:div {:style (css {:cursor "pointer"
-                         :color (if (= selector :other-income) "#222" "#bbb")})
+     [:div {:style (merge (styles/choose-button (= selector :other-income))
+                          styles/rounded-corners-left)
             :on-click #(dispatch [:data-selector-change :other-income])}
       "inne dochody"]
-     [:div {:style (css {:cursor "pointer"
-                         :color (if (= selector :cash) "#222" "#bbb")})
+     [:div {:style (merge (styles/choose-button (= selector :cash))
+                          styles/rounded-corners-right)
             :on-click #(dispatch [:data-selector-change :cash])}
       "zasoby pieniężne"]]))
+
+(defn header-text
+  []
+  (with-subs [width [:header-width]]
+    [:div {:style (css {:width width
+                        :display "inline-block"
+                        :text-align "justify"})}
+     [:p "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus feugiat quam justo, vel egestas urna eleifend vitae. Proin a massa at eros fringilla sodales et non risus. Integer vitae mattis orci. Aliquam dignissim neque ante, vel pulvinar metus facilisis ut. Fusce posuere at nunc ac rutrum. Sed dictum ac nisl id sodales. Maecenas mollis tincidunt lacus, quis tincidunt turpis semper at. Pellentesque aliquet massa vel est mollis blandit. Aenean malesuada ligula ligula, nec condimentum urna egestas eu. Sed in feugiat nisi. Etiam a facilisis sapien, id viverra tortor. Nunc nec ex vel orci posuere lobortis ut sit amet sem. Phasellus porta est eget mi hendrerit tincidunt."]
+     [:p "Mauris ultricies aliquam arcu, id sagittis leo volutpat et. Suspendisse nibh justo, efficitur a turpis eget, ultrices posuere tellus. Morbi porta enim a convallis mollis. Etiam lectus magna, pulvinar vitae tempus nec, hendrerit eu lectus. Morbi efficitur orci vitae arcu fringilla consequat. Donec porttitor felis eu ligula pellentesque tempor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Sed sed tincidunt felis. Suspendisse iaculis, ante pretium porta volutpat, risus sapien aliquet ligula, in pulvinar ipsum diam et nisl."]]))
 
 (defn graph-wrapper
   []
   [:div {:style (css {:text-align "center"})}
+   [header-text]
    [data-selector]
    [graph]])
 
 (defn main
   []
-  [:div {:style (css {:position "absolute"
-                      :left 0
-                      :right 0
-                      :top 0})}
+  [:div {:style styles/main}
    [graph-wrapper]])

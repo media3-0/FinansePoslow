@@ -37,3 +37,8 @@
   :highlight-id
   (fn [db]
     (reaction (:highlight-id @db))))
+
+(register-sub
+  :header-width
+  (fn [db]
+    (reaction (min ((:window-size @db) 0) 800))))
