@@ -1,6 +1,8 @@
 (ns assets-vis.handlers
   (:require-macros [cljs-log.core :refer [info warn]])
   (:require [assets-vis.localstorage :as localstorage]
+            [assets-vis.tick :as tick]
+            [assets-vis.animate :as animate]
             [cognitect.transit :as transit]
             [re-frame.core :refer [register-handler dispatch]]
             [ajax.core :refer [GET raw-response-format]]))
@@ -38,7 +40,9 @@
                  (add-dom-listener :resize dispatch-resize)
                  (assoc :graph-years ["2011" "2015"]
                         :data-selector :cash
-                        :window-size (window-size)))]
+                        :window-size (window-size)))
+          db (if-not (:tick/tick db) (tick/init-ticker db) db)]
+      (animate/register-animations :animations-handler)
       (get-data)
       db)))
 

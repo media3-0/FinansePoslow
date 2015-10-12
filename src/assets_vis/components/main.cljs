@@ -7,7 +7,8 @@
             [assets-vis.components.styles :as styles]
             [clojure.string :as s]
             [goog.string :refer [format]]
-            [goog.string.format]))
+            [goog.string.format]
+            [assets-vis.animate :refer [animate-component]]))
 
 (defn format-cash [string]
   (let [splited (s/split string ".")
@@ -22,14 +23,13 @@
          (last splited))))
 
 (defn bar
-  [{:keys [id name height x y year max-value column-width selector highlight?] :as data}]
+  [{:keys [id name height x y max-value column-width cash highlight?] :as data}]
   (let [margin 6
         font-size (:font-size-small styles/consts)
-        cash (format "%.2f" (get-in (get data selector) [year :sum]))]
+        cash (format "%.2f" cash)]
     [:g {:on-mouse-over #(dispatch [:highlight-id id])
          :on-mouse-out #(dispatch [:highlight-id nil])
-         :style (css {:transform (str "translate(" x "px," y "px)")
-                      :transition "transform 500ms"})}
+         :style (css {:transform (str "translate(" x "px," y "px)")})}
      [:rect {:height (- height margin)
              :width column-width
              :fill (if highlight? (:gray-dark styles/colors) (:gray styles/colors))
@@ -53,33 +53,41 @@
       (str (format-cash cash) " zł")]]))
 
 (defn column
-  [{:keys [x year data selector column-width highlight-id]}]
-  (let [sorted-values (:sorted-values data)
-        max-value (:max-value data)]
-    [:g
-     (for [[i [ma-id ma-data]] (map-indexed vector sorted-values)]
-       ^{:key ma-id}
-       [bar (conj ma-data {:id ma-id
-                           :height (:bar-height styles/consts)
-                           :x x
-                           :y (* i (:bar-height styles/consts))
-                           :selector selector
-                           :column-width column-width
-                           :year year
-                           :highlight? (= ma-id highlight-id)
-                           :max-value max-value})])]))
+  [{:keys [all-ma-ids]}]
+  (let [animated-bars (into {} (map
+                                 (fn [ma-id] [ma-id (animate-component bar [:cash :y :max-value])])
+                                 all-ma-ids))]
+    (fn [{:keys [x year data selector column-width highlight-id]}]
+      [:g
+       (for [[i [ma-id ma-data]] (map-indexed vector (:sorted-values data))]
+         ^{:key ma-id}
+         [(get animated-bars ma-id)
+          (conj ma-data
+                {:id ma-id
+                 :height (:bar-height styles/consts)
+                 :x x
+                 :y (* i (:bar-height styles/consts))
+                 :cash (get-in (get ma-data selector) [year :sum])
+                 :column-width column-width
+                 :highlight? (= ma-id highlight-id)
+                 :max-value (:max-value data)})])])))
 
 (defn columns
   [{:keys [years data column-width column-margin selector highlight-id]}]
-  [:g
-   (for [[i year] (map-indexed vector years)]
-     ^{:key i}
-     [column {:x (* i (+ column-width column-margin))
-              :column-width column-width
-              :highlight-id highlight-id
-              :year year
-              :selector selector
-              :data (get-in data [year selector])}])])
+  (let [all-ma-ids (->> data
+                        (map (fn [[_ v]] (keys (-> v :cash :sorted-values))))
+                        flatten
+                        distinct)]
+    [:g
+     (for [[i year] (map-indexed vector years)]
+       ^{:key i}
+       [column {:x (* i (+ column-width column-margin))
+                :column-width column-width
+                :highlight-id highlight-id
+                :year year
+                :selector selector
+                :all-ma-ids all-ma-ids
+                :data (get-in data [year selector])}])]))
 
 (defn indices
   [pred coll]
@@ -213,7 +221,20 @@
    [data-selector]
    [graph]])
 
+(defn display-number [{:keys [n const]}]
+  [:div "n: " n " " const])
+
+(defn timer-component
+  []
+  (let [seconds-elapsed (reagent/atom 0)
+        animated (animate-component display-number [:n] {:anim-time 500})]
+    (fn []
+      (js/setTimeout #(swap! seconds-elapsed inc) 1000)
+      (let [n (* 100 @seconds-elapsed)]
+        [animated {:n n :const "CCC"}]))))
+
 (defn main
   []
   [:div {:style styles/main}
+   #_[timer-component]
    [graph-wrapper]])
