@@ -54,7 +54,7 @@
 
 (defn year-data
   [data selector year]
-  (let [members 100
+  (let [members 50
         max-value (apply max (map #(get-in % [1 selector year :sum]) data))
         sorted-values (take members (reverse (sort-by #(get-in % [1 selector year :sum]) data)))]
     {:max-value max-value

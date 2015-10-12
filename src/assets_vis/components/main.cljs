@@ -73,31 +73,25 @@
                  :max-value (:max-value data)})])])))
 
 (defn columns
-  [{:keys [years data column-width column-margin selector highlight-id]}]
-  (let [all-ma-ids (->> data
-                        (map (fn [[_ v]] (keys (-> v :cash :sorted-values))))
-                        flatten
-                        distinct)]
-    [:g
-     (for [[i year] (map-indexed vector years)]
-       ^{:key i}
-       [column {:x (* i (+ column-width column-margin))
-                :column-width column-width
-                :highlight-id highlight-id
-                :year year
-                :selector selector
-                :all-ma-ids all-ma-ids
-                :data (get-in data [year selector])}])]))
+  [{:keys [years data column-width column-margin selector highlight-id all-ma-ids]}]
+  [:g
+   (for [[i year] (map-indexed vector years)]
+     ^{:key i}
+     [column {:x (* i (+ column-width column-margin))
+              :column-width column-width
+              :highlight-id highlight-id
+              :year year
+              :selector selector
+              :all-ma-ids all-ma-ids
+              :data (get-in data [year selector])}])])
 
 (defn indices
   [pred coll]
   (keep-indexed #(when (pred %2) %1) coll))
 
-(defn connection
-  [{:keys [year-1 year-2 x column-margin highlight-id members-count]}]
-  (let [line-width (:line-width styles/consts)
-        bar-height (:bar-height styles/consts)
-        lines (map
+(defn lines-for-years
+  [year-1 year-2]
+  (let [lines (map
                 (fn [[i-1 [ma-1-id year-1-data]]]
                   (let [i-2 (indices (fn [[ma-2-id _]] (= ma-2-id ma-1-id)) year-2)]
                     [i-1 (first i-2) ma-1-id]))
@@ -106,29 +100,40 @@
                         (and (not (nil? i-1))
                              (not (nil? i-2))))
                       lines)]
-    [:g
-     (for [[i-1 i-2 id] lines]
-       ^{:key id}
-       [:line {:x1 (- x (/ line-width 2))
-               :y1 (+ (* i-1 bar-height) (/ bar-height 2))
-               :x2 (+ x column-margin (/ line-width 2))
-               :y2 (+ (* i-2 bar-height) (/ bar-height 2))
-               :stroke (if (= id highlight-id) (:gray-dark styles/colors) (:gray styles/colors))
-               :stroke-width line-width
-               :on-mouse-over #(dispatch [:highlight-id id])
-               :on-mouse-out #(dispatch [:highlight-id nil])}])]))
+    lines))
+
+(defn connection
+  [{:keys [all-ma-ids]}]
+  (let [line-width (:line-width styles/consts)
+        bar-height (:bar-height styles/consts)
+        animated-lines (into {} (map
+                                  (fn [ma-id] [ma-id (animate-component :line [:y1 :y2])])
+                                  all-ma-ids))]
+    (fn [{:keys [year-1 year-2 x column-margin highlight-id]}]
+      [:g
+       (for [[i-1 i-2 id] (lines-for-years year-1 year-2)]
+         ^{:key id}
+         [(get animated-lines id)
+          {:x1 (- x (/ line-width 2))
+           :y1 (+ (* i-1 bar-height) (/ bar-height 2))
+           :x2 (+ x column-margin (/ line-width 2))
+           :y2 (+ (* i-2 bar-height) (/ bar-height 2))
+           :stroke (if (= id highlight-id) (:gray-dark styles/colors) (:gray styles/colors))
+           :stroke-width line-width
+           :on-mouse-over #(dispatch [:highlight-id id])
+           :on-mouse-out #(dispatch [:highlight-id nil])}])])))
 
 (defn connections
-  [{:keys [years data selector column-width column-margin highlight-id members-count]}]
+  [{:keys [years data selector column-width column-margin highlight-id all-ma-ids]}]
   [:g
    (for [[i [year-1 year-2]] (map-indexed vector (partition 2 1 years))]
      ^{:key i}
      [connection {:year-1 (get-in data [year-1 selector :sorted-values])
                   :year-2 (get-in data [year-2 selector :sorted-values])
+                  :all-ma-ids all-ma-ids
                   :x (+ (* i (+ column-width column-margin)) column-width)
                   :column-margin column-margin
-                  :highlight-id highlight-id
-                  :members-count members-count}])])
+                  :highlight-id highlight-id}])])
 
 (defn header-year-select
   [{:keys [available-years selected-year column-index column-width column-margin]}]
@@ -170,7 +175,11 @@
           column-width (/ width 3)
           column-margin (/ width 3)
           header-height 60
-          available-years (map str (range 2011 2016))]
+          available-years (map str (range 2011 2016))
+          all-ma-ids (->> data
+                          (map (fn [[_ v]] (keys (-> v :cash :sorted-values))))
+                          flatten
+                          distinct)]
       [:svg {:height (* (:bar-height styles/consts) members-count)
              :width (- (* (+ column-width column-margin) (count graph-years)) column-margin)}
        [header {:available-years available-years
@@ -178,19 +187,21 @@
                 :column-width column-width
                 :column-margin column-margin}]
        [:g {:transform (str "translate(0," header-height ")")}
-        [connections {:years graph-years
+        [connections {:available-years available-years
+                      :years graph-years
                       :data data
                       :selector selector
                       :column-width column-width
                       :column-margin column-margin
                       :highlight-id highlight-id
-                      :members-count members-count}]
+                      :all-ma-ids all-ma-ids}]
         [columns {:years graph-years
                   :data data
                   :selector selector
                   :column-width column-width
                   :column-margin column-margin
-                  :highlight-id highlight-id}]]])))
+                  :highlight-id highlight-id
+                  :all-ma-ids all-ma-ids}]]])))
 
 (defn data-selector
   []
