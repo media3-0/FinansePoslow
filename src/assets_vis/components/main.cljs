@@ -6,6 +6,7 @@
             [assets-vis.css :refer [css]]
             [assets-vis.components.styles :as styles]
             [clojure.string :as s]
+            [clojure.set :refer [union]]
             [goog.string :refer [format]]
             [goog.string.format]
             [assets-vis.animate :refer [animate-component]]))
@@ -162,6 +163,17 @@
                                     :column-width column-width
                                     :column-margin column-margin }])])
 
+(defn calculate-all-ids
+  [data]
+  (->> data
+       (map (fn [[_ v]]
+              (into '()
+                    (union
+                      (set (keys (-> v :cash :sorted-values)))
+                      (set (keys (-> v :other-income :sorted-values)))))))
+       flatten
+       distinct))
+
 (defn graph
   []
   (with-subs [data [:data]
@@ -176,10 +188,7 @@
           column-margin (/ width 3)
           header-height 60
           available-years (map str (range 2011 2016))
-          all-ma-ids (->> data
-                          (map (fn [[_ v]] (keys (-> v :cash :sorted-values))))
-                          flatten
-                          distinct)]
+          all-ma-ids (calculate-all-ids data)]
       [:svg {:height (* (:bar-height styles/consts) members-count)
              :width (- (* (+ column-width column-margin) (count graph-years)) column-margin)}
        [header {:available-years available-years
