@@ -55,10 +55,9 @@
         anim-targets (atom (props-vec->props-map props-vec))
         anim-subs (subscribe [:animation])]
     (fn [props]
-      (if (not (= (select-keys props props-vec) @anim-targets))
-        (do
-          (reset! anim-targets (select-keys props props-vec))
-          (reset! start-time (.getTime (js/Date.)))))
+      (when (not= (select-keys props props-vec) @anim-targets)
+        (reset! anim-targets (select-keys props props-vec))
+        (reset! start-time (.getTime (js/Date.))))
       (let [time-diff (min 1.0 (/ (- (:last @anim-subs) @start-time) anim-time))]
         (reset! anim-props (animate-props @anim-targets @anim-props props-vec time-diff))
         [component (merge props @anim-props)]))))
