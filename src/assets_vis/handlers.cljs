@@ -34,12 +34,13 @@
 (register-handler
   :init-app
   (fn [db _]
-    (get-data)
-    (-> db
-        (add-dom-listener :resize dispatch-resize)
-        (assoc :graph-years ["2011" "2015"]
-               :data-selector :cash
-               :window-size (window-size)))))
+    (let [db (-> db
+                 (add-dom-listener :resize dispatch-resize)
+                 (assoc :graph-years ["2011" "2015"]
+                        :data-selector :cash
+                        :window-size (window-size)))]
+      (get-data)
+      db)))
 
 (register-handler
   :resize-window

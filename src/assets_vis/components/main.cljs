@@ -1,22 +1,23 @@
 (ns assets-vis.components.main
   (:require-macros [assets-vis.utils :refer [with-subs]]
                    [cljs-log.core :refer [info]])
-  (:require [reagent.core :refer [create-class dom-node]]
+  (:require [reagent.core :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
             [assets-vis.css :refer [css]]
             [assets-vis.components.styles :as styles]
-            [goog.string :as s]
+            [clojure.string :as s]
+            [goog.string :refer [format]]
             [goog.string.format]))
 
 (defn format-cash [string]
-  (let [splited (clojure.string/split string ".")
+  (let [splited (s/split string ".")
         cash (first splited)]
-    (str (apply str
-                (reverse (clojure.string/join
-                           " "
-                           (map
-                             clojure.string/join
-                             (partition 3 3 nil (reverse cash))))))
+    (str (->> cash
+              reverse
+              (partition 3 3 nil)
+              (map s/join)
+              (s/join " ")
+              (s/reverse))
          ","
          (last splited))))
 
@@ -24,26 +25,28 @@
   [{:keys [id name height x y year max-value column-width selector highlight?] :as data}]
   (let [margin 6
         font-size (:font-size-small styles/consts)
-        cash (s/format "%.2f" (get-in (get data selector) [year :sum]))]
+        cash (format "%.2f" (get-in (get data selector) [year :sum]))]
     [:g {:on-mouse-over #(dispatch [:highlight-id id])
-         :on-mouse-out #(dispatch [:highlight-id nil])}
+         :on-mouse-out #(dispatch [:highlight-id nil])
+         :style (css {:transform (str "translate(" x "px," y "px)")
+                      :transition "transform 500ms"})}
      [:rect {:height (- height margin)
              :width column-width
              :fill (if highlight? (:gray-dark styles/colors) (:gray styles/colors))
-             :x x
-             :y y}]
+             :x 0
+             :y 0}]
      [:rect {:height (- height margin)
              :width (* (/ cash max-value) column-width)
              :fill (:blue styles/colors)
-             :x x
-             :y y}]
-     [:text {:x (+ x margin)
-             :y (+ y font-size 5)
+             :x 0
+             :y 0}]
+     [:text {:x margin
+             :y (+ font-size 5)
              :font-size font-size
              :fill (:main-text-color styles/colors)}
       name]
-     [:text {:x (+ x margin)
-             :y (+ y (* font-size 2) 8)
+     [:text {:x margin
+             :y (+ (* font-size 2) 8)
              :font-size (- font-size 2)
              :fill (:main-text-color styles/colors)
              :style styles/bar-cash}
@@ -70,7 +73,7 @@
   [{:keys [years data column-width column-margin selector highlight-id]}]
   [:g
    (for [[i year] (map-indexed vector years)]
-     ^{:key (str i "-" year)}
+     ^{:key i}
      [column {:x (* i (+ column-width column-margin))
               :column-width column-width
               :highlight-id highlight-id
