@@ -20,18 +20,12 @@
         (assoc db id fn))
     db))
 
-(defn cached-request [url handler]
-  (if-let [data (localstorage/get-item url)]
-    (handler data)
-    (GET url {:handler handler
-              :response-format (raw-response-format)})))
-
 (defn get-data []
-  (cached-request "data.transit.json"
-                  (fn [data]
-                    (let [reader (transit/reader :json)
-                          parsed (transit/read reader data)]
-                      (dispatch [:downloaded-data parsed])))))
+  (GET "data.transit.json" {:handler (fn [data]
+                                       (let [reader (transit/reader :json)
+                                             parsed (transit/read reader data)]
+                                         (dispatch [:downloaded-data parsed])))
+                            :response-format (raw-response-format)}))
 
 (register-handler
   :init-app

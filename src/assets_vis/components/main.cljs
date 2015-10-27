@@ -225,14 +225,49 @@
             :on-click #(dispatch [:data-selector-change :cash])}
       "zasoby pieniężne"]]))
 
+(defn a-with-text
+  [href]
+  [:a {:href href :style styles/a-href} href])
+
 (defn header-text
   []
   (with-subs [width [:header-width]]
     [:div {:style (css {:width width
                         :display "inline-block"
                         :text-align "justify"})}
-     [:p "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus feugiat quam justo, vel egestas urna eleifend vitae. Proin a massa at eros fringilla sodales et non risus. Integer vitae mattis orci. Aliquam dignissim neque ante, vel pulvinar metus facilisis ut. Fusce posuere at nunc ac rutrum. Sed dictum ac nisl id sodales. Maecenas mollis tincidunt lacus, quis tincidunt turpis semper at. Pellentesque aliquet massa vel est mollis blandit. Aenean malesuada ligula ligula, nec condimentum urna egestas eu. Sed in feugiat nisi. Etiam a facilisis sapien, id viverra tortor. Nunc nec ex vel orci posuere lobortis ut sit amet sem. Phasellus porta est eget mi hendrerit tincidunt."]
-     [:p "Mauris ultricies aliquam arcu, id sagittis leo volutpat et. Suspendisse nibh justo, efficitur a turpis eget, ultrices posuere tellus. Morbi porta enim a convallis mollis. Etiam lectus magna, pulvinar vitae tempus nec, hendrerit eu lectus. Morbi efficitur orci vitae arcu fringilla consequat. Donec porttitor felis eu ligula pellentesque tempor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Sed sed tincidunt felis. Suspendisse iaculis, ante pretium porta volutpat, risus sapien aliquet ligula, in pulvinar ipsum diam et nisl."]]))
+     [:h1 "Prześwietlamy finanse posłów"]
+     [:p
+      "Postanowiliśmy przyjrzeć się najnowszym oświadczeniom majątkowym na koniec VII kadencji Sejmu. Każdy poseł zobowiązany jest do złożenia oświadczenia o swym stanie majątkowym."
+      "Ze swego obowiązku wywiązuje się poprzez wypełnienie druku " 
+      [a-with-text "http://www.sejm.gov.pl/poslowie/oswmajatkposla.pdf"]
+      " oraz złożenia go w Kancelarii Sejmu. "
+      "W jaki sposób oświadczenia są weryfikowane? Analizą oświadczeń zajmuje się Komisja Etyki Poselskiej, która czasami wzywa posłów do złożenia wyjaśnienia. "
+      "Oświadczenia sprawdzać też może Centralne Biuro Antykorupcyjne. Jakakolwiek jednak instytucja, która miałaby zweryfikować prawdziwość oświadczeń będzie miała problem z ustaleniem stanu faktycznego. "
+      "A jakie szanse mamy my jako obywatele? Niestety wszystkie oświadczenia wypisywane są ręcznie przez samych posłów. Często zdarza się, że nie da się jednoznacznie określić którejś z cyfr kwoty podanej przez posła. "
+      "Karkołomnego zadania próby przepisania wszystkich oświadczeń majątkowych podjął się serwis "
+      [a-with-text "http://mamprawowiedziec.pl"]
+      ". Wspólnym wysiłkiem udało się przepisać do arkuszy kalkulacyjnych wszystkie oświadczenia majątkowe do aktualnego stanu. Okazało się jednak, że to dopiero początek drogi."
+      "Dane wpisywane przez sposób okazały się strasznie niechlujne, np. nie do końca wiadomo, czy w rubryce o zobowiązaniach finansowych poseł wpisuje pozostałą do spłacenia część kredytu czy też cały zaciągnięty kredyt"
+      "(niektórzy posłowie o tym informowali, inni nie, zaś sumy te znacznie różniły się na przestrzeni jednego roku). "
+      "Przeprowadziliśmy wiele prób automatycznego \"wyczyszczenia danych\", następnie rozpoczęliśmy prace na wizualizacją. "
+      "Na niniejszej stronie możecie porównać dochody pozasejmowe posła na przestrzeni lat oraz zgromadzony majątek. W przypadku znalezienia błędu bardzo prosimy o zgłoszenia na adres: "
+      [:a {:href "mailto:ktorzadzi@media30.pl" :style styles/a-href} "ktorzadzi@media30.pl"]]
+     [:p
+      "Autorzy: "
+      [:a {:href "http://treesmovethemost.com" :style styles/a-href} "Szymon Kaliski"]
+      ", "
+      [:a {:href "http://ktorzadzi.pl" :style styles/a-href} "Łukasz Żyła"]]
+     [:p
+      "Dane: "
+      [a-with-text "http://mamprawowiedziec.pl"]]
+     [:img {:src "baner.png"}]
+     [:div {:style (css {:border-bottom (str "1px solid " (:gray-light styles/colors))
+                         :margin-top 20
+                         :margin-bottom 20})}]
+     [:p {:style (css {:color (:gray-dark styles/colors)
+                       :margin-bottom 60
+                       :font-size (:font-size-small styles/consts)})}
+      "Strona internetowa jest częścią projektu \"Ktorzadzi.pl - dziennikarstwo danych\" prowadzonego przez fundację Media 3.0 realizowanego w ramach programu Obywatele dla Demokracji, finansowanego z Funduszy EOG."]]))
 
 (defn graph-wrapper
   []
@@ -241,20 +276,7 @@
    [data-selector]
    [graph]])
 
-(defn display-number [{:keys [n const]}]
-  [:div "n: " n " " const])
-
-(defn timer-component
-  []
-  (let [seconds-elapsed (reagent/atom 0)
-        animated (animate-component display-number [:n] {:anim-time 500})]
-    (fn []
-      (js/setTimeout #(swap! seconds-elapsed inc) 1000)
-      (let [n (* 100 @seconds-elapsed)]
-        [animated {:n n :const "CCC"}]))))
-
 (defn main
   []
   [:div {:style styles/main}
-   #_[timer-component]
    [graph-wrapper]])

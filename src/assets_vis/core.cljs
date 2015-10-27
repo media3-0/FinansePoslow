@@ -10,7 +10,7 @@
   (with-subs [initialized? [:app-initalized?]]
     (if initialized?
       main
-      [:div "Ładowanie..."])))
+      [:div "..."])))
 
 (defn init []
   (dispatch [:init-app])

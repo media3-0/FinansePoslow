@@ -47,3 +47,8 @@
 
 (def bar-cash
   (css {:font-weight "bold"}))
+
+(def a-href
+  (css {:color (:main-text-color colors)
+        :text-decoration "none"
+        :border-bottom (str "1px solid " (:gray-dark colors))}))
