@@ -235,9 +235,9 @@
     [:div {:style (css {:width width
                         :display "inline-block"
                         :text-align "justify"})}
-     [:h1 "Prześwietlamy finanse posłów"]
+     [:h1 {:style (css {:text-align "center"})} "Prześwietlamy finanse posłów"]
      [:p
-      "Postanowiliśmy przyjrzeć się najnowszym oświadczeniom majątkowym na koniec VII kadencji Sejmu. Każdy poseł zobowiązany jest do złożenia oświadczenia o swym stanie majątkowym."
+      "Postanowiliśmy przyjrzeć się najnowszym oświadczeniom majątkowym na koniec VII kadencji Sejmu. Każdy poseł zobowiązany jest do złożenia oświadczenia o swym stanie majątkowym. "
       "Ze swego obowiązku wywiązuje się poprzez wypełnienie druku " 
       [a-with-text "http://www.sejm.gov.pl/poslowie/oswmajatkposla.pdf"]
       " oraz złożenia go w Kancelarii Sejmu. "
@@ -260,7 +260,8 @@
      [:p
       "Dane: "
       [a-with-text "http://mamprawowiedziec.pl"]]
-     [:img {:src "baner.png"}]
+     [:img {:src "baner.png"
+            :style (css {:margin-top 20})}]
      [:div {:style (css {:border-bottom (str "1px solid " (:gray-light styles/colors))
                          :margin-top 20
                          :margin-bottom 20})}]

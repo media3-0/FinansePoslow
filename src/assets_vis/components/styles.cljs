@@ -2,16 +2,16 @@
   (:require [assets-vis.css :refer [css]]))
 
 (def colors
-  {:main-text-color "#444"
-   :gray "#ddd"
+  {:main-text-color "#333"
+   :gray "#efefef"
    :gray-light "#eee"
-   :gray-dark "#ccc"
-   :blue "#7DB5D7"})
+   :gray-dark "#dfdfdf"
+   :blue "#bad9e8"})
 
 (def consts
   {:border-radius 6
-   :font-size 16
-   :font-size-small 14
+   :font-size 14
+   :font-size-small 13
    :font-size-big 20
    :bar-height 50
    :line-width 4})
