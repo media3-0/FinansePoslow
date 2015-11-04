@@ -231,16 +231,23 @@
 
 (defn header-text
   []
-  (with-subs [width [:header-width]]
+  (with-subs [width [:header-width]
+              info-opened? [:info-opened?]]
     [:div {:style (css {:width width
                         :display "inline-block"
                         :text-align "justify"})}
      [:h1 {:style (css {:text-align "center"})} "Prześwietlamy finanse posłów"]
      [:p
       "Postanowiliśmy przyjrzeć się najnowszym oświadczeniom majątkowym na koniec VII kadencji Sejmu. Każdy poseł zobowiązany jest do złożenia oświadczenia o swym stanie majątkowym. "
-      "Ze swego obowiązku wywiązuje się poprzez wypełnienie druku " 
+      "Ze swego obowiązku wywiązuje się poprzez wypełnienie druku "
       [a-with-text "http://www.sejm.gov.pl/poslowie/oswmajatkposla.pdf"]
-      " oraz złożenia go w Kancelarii Sejmu. "
+      " oraz złożenia go w Kancelarii Sejmu. "]
+     [:p {:style (if info-opened?
+                   {:max-height 1000
+                    :transition "max-height 500ms"}
+                   {:max-height 0
+                    :transition "max-height 500ms"
+                    :overflow "hidden"})}
       "W jaki sposób oświadczenia są weryfikowane? Analizą oświadczeń zajmuje się Komisja Etyki Poselskiej, która czasami wzywa posłów do złożenia wyjaśnienia. "
       "Oświadczenia sprawdzać też może Centralne Biuro Antykorupcyjne. Jakakolwiek jednak instytucja, która miałaby zweryfikować prawdziwość oświadczeń będzie miała problem z ustaleniem stanu faktycznego. "
       "A jakie szanse mamy my jako obywatele? Niestety wszystkie oświadczenia wypisywane są ręcznie przez samych posłów. Często zdarza się, że nie da się jednoznacznie określić którejś z cyfr kwoty podanej przez posła. "
@@ -252,6 +259,12 @@
       "Przeprowadziliśmy wiele prób automatycznego \"wyczyszczenia danych\", następnie rozpoczęliśmy prace na wizualizacją. "
       "Na niniejszej stronie możecie porównać dochody pozasejmowe posła na przestrzeni lat oraz zgromadzony majątek. W przypadku znalezienia błędu bardzo prosimy o zgłoszenia na adres: "
       [:a {:href "mailto:ktorzadzi@media30.pl" :style styles/a-href} "ktorzadzi@media30.pl"]]
+     [:div {:style (css {:text-align "center"})}
+      [:span {:on-click #(dispatch [:toggle-info])
+              :style (css (styles/read-more-button info-opened?))}
+       (if info-opened?
+         "Schowaj informacje"
+         "Przeczytaj więcej...")]]
      [:p
       "Autorzy: "
       [:a {:href "http://treesmovethemost.com" :style styles/a-href} "Szymon Kaliski"]
@@ -260,6 +273,7 @@
      [:p
       "Dane: "
       [a-with-text "http://mamprawowiedziec.pl"]]
+
      [:img {:src "baner.png"
             :style (css {:margin-top 20})}]
      [:div {:style (css {:border-bottom (str "1px solid " (:gray-light styles/colors))

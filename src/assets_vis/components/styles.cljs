@@ -45,6 +45,17 @@
         :color (:main-text-color colors)
         :cursor "pointer"}))
 
+(defn read-more-button [opened?]
+  (css {:border (str "1px solid " (:gray colors))
+        :background (if opened? (:gray-light colors) "#fff")
+        :font-weight (if opened? "bold" "normal")
+        :font-size 12
+        :padding 8
+        :border-radius (:border-radius consts)
+        :display "inline-block"
+        :margin "0 auto"
+        :cursor "pointer"}))
+
 (def bar-cash
   (css {:font-weight "bold"}))
 

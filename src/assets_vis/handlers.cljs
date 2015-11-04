@@ -33,6 +33,7 @@
     (let [db (-> db
                  (add-dom-listener :resize dispatch-resize)
                  (assoc :graph-years ["2011" "2015"]
+                        :info-opened? false
                         :data-selector :cash
                         :window-size (window-size)))
           db (if-not (:tick/tick db) (tick/init-ticker db) db)]
@@ -79,3 +80,8 @@
   :highlight-id
   (fn [db [_ id]]
     (assoc db :highlight-id id)))
+
+(register-handler
+  :toggle-info
+  (fn [db _]
+    (update-in db [:info-opened?] not)))
