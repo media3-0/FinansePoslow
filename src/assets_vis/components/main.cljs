@@ -253,8 +253,8 @@
       "A jakie szanse mamy my jako obywatele? Niestety wszystkie oświadczenia wypisywane są ręcznie przez samych posłów. Często zdarza się, że nie da się jednoznacznie określić którejś z cyfr kwoty podanej przez posła. "
       "Karkołomnego zadania próby przepisania wszystkich oświadczeń majątkowych podjął się serwis "
       [a-with-text "http://mamprawowiedziec.pl"]
-      ". Wspólnym wysiłkiem udało się przepisać do arkuszy kalkulacyjnych wszystkie oświadczenia majątkowe do aktualnego stanu. Okazało się jednak, że to dopiero początek drogi."
-      "Dane wpisywane przez sposób okazały się strasznie niechlujne, np. nie do końca wiadomo, czy w rubryce o zobowiązaniach finansowych poseł wpisuje pozostałą do spłacenia część kredytu czy też cały zaciągnięty kredyt"
+      ". Wspólnym wysiłkiem udało się przepisać do arkuszy kalkulacyjnych wszystkie oświadczenia majątkowe do aktualnego stanu. Okazało się jednak, że to dopiero początek drogi. "
+      "Dane wpisywane przez posłów okazały się strasznie niechlujne, np. nie do końca wiadomo, czy w rubryce o zobowiązaniach finansowych poseł wpisuje pozostałą do spłacenia część kredytu czy też cały zaciągnięty kredyt "
       "(niektórzy posłowie o tym informowali, inni nie, zaś sumy te znacznie różniły się na przestrzeni jednego roku). "
       "Przeprowadziliśmy wiele prób automatycznego \"wyczyszczenia danych\", następnie rozpoczęliśmy prace na wizualizacją. "
       "Na niniejszej stronie możecie porównać dochody pozasejmowe posła na przestrzeni lat oraz zgromadzony majątek. W przypadku znalezienia błędu bardzo prosimy o zgłoszenia na adres: "
