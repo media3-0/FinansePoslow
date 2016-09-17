@@ -22,7 +22,7 @@
                                    :output-to "resources/public/js/assets_vis.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :source-map true
-                                   :source-map-timestamp true }}
+                                   :source-map-timestamp true}}
                        {:id "prod"
                         :source-paths ["src"]
                         :compiler {:output-to "resources/public/js/assets_vis.js"
